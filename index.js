@@ -67,20 +67,15 @@ axios.get(url)
         const track_list = res.data.message.body.track_list;
         let song, name, id, index;
 
-        // check for when track is null
+        if (track_list.length === 1)
+            index = 0;
 
-        if (track_list.length === 1) {
-            name = track_list[0].track.track_name;
-            id = track_list[0].track.track_id;
-            song = new Song(name, id);
-        }
-
-        else {
+        else
             index = Math.floor(Math.random() * track_list.length);
-            name = track_list[index].track.track_name;
-            id = track_list[index].track.track_id;
-            song = new Song(name, id);
-        }
+
+        name = track_list[index].track.track_name;
+        id = track_list[index].track.track_id;
+        song = new Song(name, id);
 
         url = api_methods.get_lyrics + song.id;
 
@@ -110,16 +105,12 @@ axios.get(url)
         let tweet = stanzas[start] + stanzas[start + 1];
         tweet = tweet.substring(0, tweet.length - 1);
 
-        console.log('success');
-
-        /*
         client.post('statuses/update', { status: tweet }, (err, tweet, res) => {
             if (err)
                 throw err;
 
             console.log(res);
         });
-        */
     })
     .catch(err => {
         console.log(err);
