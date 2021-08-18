@@ -4,10 +4,11 @@ to do:
         - if it is null, do not tweet anything
 */
 
-
 const dotenv = require('dotenv');
 const Twitter = require('twitter');
+const Promise = require('bluebird');
 const axios = require('axios');
+const randomNumber = require('random-number-csprng');
 dotenv.config();
 
 const client = new Twitter({
@@ -56,9 +57,23 @@ axios.get(url)
             albums.push(new Album(name, id));
         }
 
+        Promise.try(() => {
+            return randomNumber(0, albums.length - 1);
+        })
+            .then(index => {
+                let album = albums[index];
+                url = api_methods.get_tracks + album.id;
+                return axios.get(url);
+            })
+            .then(res => {
+
+            })
+
+        /*
         let album = albums[Math.floor(Math.random() * albums.length)];
 
         url = api_methods.get_tracks + album.id;
+        */
 
         return axios.get(url);
 
@@ -101,16 +116,30 @@ axios.get(url)
             }
         }
 
-        let start = Math.floor(Math.random() * stanzas.length);
+        Promise.try(() => {
+            return randomNumber(0, stanzas.length - 3);
+        })
+            .then(index => {
+                let tweet = stanzas[index] + stanzas[index + 1];
+                tweet = tweet.substring(0, tweet.length - 1);
+                console.log(tweet);
+            });
+
+        /*
+        let start = Math.floor(Math.random() * (stanzas.length - 3));
         let tweet = stanzas[start] + stanzas[start + 1];
         tweet = tweet.substring(0, tweet.length - 1);
 
+        console.log(tweet);
+
+        /*
         client.post('statuses/update', { status: tweet }, (err, tweet, res) => {
             if (err)
                 throw err;
 
             console.log(res);
         });
+        */
     })
     .catch(err => {
         console.log(err);
