@@ -15,6 +15,14 @@ const client = new Twitter({
 const musix_api_key = process.env.MUSIX_API_KEY;
 const artist_id = 18927;
 
+const base_url = 'https://api.musixmatch.com/ws/1.1/';
+
+const api_methods = {
+    get_albums: `${base_url}artist.albums.get?apikey=${musix_api_key}&artist_id=${artist_id}`,
+    get_tracks: `${base_url}album.tracks.get?apikey=${musix_api_key}&album_id=`,
+    get_lyrics: `${base_url}track.lyrics.get?apikey=${musix_api_key}&track_id=`
+};
+
 class Album {
     constructor(name, id) {
         this.name = name;
@@ -28,14 +36,6 @@ class Song {
         this.id = id;
     }
 }
-
-const base_url = 'https://api.musixmatch.com/ws/1.1/';
-
-const api_methods = {
-    get_albums: `${base_url}artist.albums.get?apikey=${musix_api_key}&artist_id=${artist_id}`,
-    get_tracks: `${base_url}album.tracks.get?apikey=${musix_api_key}&album_id=`,
-    get_lyrics: `${base_url}track.lyrics.get?apikey=${musix_api_key}&track_id=`
-};
 
 function getIndex(list) {
     return Promise.try(() => {
@@ -119,19 +119,19 @@ axios.get(url)
                     tweet = tweet.substring(0, tweet.length - 1);
                     console.log(tweet);
 
-                    /*
+
                     client.post('statuses/update', { status: tweet }, (err, tweet, res) => {
                         if (err)
                             throw err;
 
                         console.log(res);
                     });
-                    */
                 })
             })
-        }).catch(err => {
-            console.log(err);
         })
+    })
+    .catch(err => {
+        console.log(err);
     })
 
 
