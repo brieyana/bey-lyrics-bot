@@ -1,9 +1,3 @@
-/*
-to do:
-    - check for when track is null
-        - if it is null, do not tweet anything
-*/
-
 const dotenv = require('dotenv');
 const Twitter = require('twitter');
 const Promise = require('bluebird');
@@ -21,7 +15,6 @@ const client = new Twitter({
 const musix_api_key = process.env.MUSIX_API_KEY;
 const artist_id = 18927;
 
-/**************************************************************** */
 class Album {
     constructor(name, id) {
         this.name = name;
@@ -44,17 +37,14 @@ const api_methods = {
     get_lyrics: `${base_url}track.lyrics.get?apikey=${musix_api_key}&track_id=`
 };
 
-let url = api_methods.get_albums;
-
-// handler methods
 function getIndex(list) {
     return Promise.try(() => {
         if (list.length == 1)
             return 0;
 
         return randomNumber(0, list.length);
-    }).catch(() => {
-        console.log("Error");
+    }).catch(err => {
+        console.log(err);
     })
 }
 
@@ -63,6 +53,8 @@ function getStart(list) {
         return randomNumber(0, list.length - 3);
     })
 }
+
+let url = api_methods.get_albums;
 
 axios.get(url)
     .then(res => {
