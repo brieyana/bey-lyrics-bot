@@ -1,13 +1,8 @@
-/*
-to do:
-    - check for when track is null
-        - if it is null, do not tweet anything
-*/
-
-
 const dotenv = require('dotenv');
 const Twitter = require('twitter');
+const Promise = require('bluebird');
 const axios = require('axios');
+const randomNumber = require('random-number-csprng');
 dotenv.config();
 
 const client = new Twitter({
@@ -20,7 +15,14 @@ const client = new Twitter({
 const musix_api_key = process.env.MUSIX_API_KEY;
 const artist_id = 18927;
 
-/**************************************************************** */
+const base_url = 'https://api.musixmatch.com/ws/1.1/';
+
+const api_methods = {
+    get_albums: `${base_url}artist.albums.get?apikey=${musix_api_key}&artist_id=${artist_id}`,
+    get_tracks: `${base_url}album.tracks.get?apikey=${musix_api_key}&album_id=`,
+    get_lyrics: `${base_url}track.lyrics.get?apikey=${musix_api_key}&track_id=`
+};
+
 class Album {
     constructor(name, id) {
         this.name = name;
@@ -35,13 +37,22 @@ class Song {
     }
 }
 
-const base_url = 'https://api.musixmatch.com/ws/1.1/';
+function getIndex(list) {
+    return Promise.try(() => {
+        if (list.length == 1)
+            return 0;
 
-const api_methods = {
-    get_albums: `${base_url}artist.albums.get?apikey=${musix_api_key}&artist_id=${artist_id}`,
-    get_tracks: `${base_url}album.tracks.get?apikey=${musix_api_key}&album_id=`,
-    get_lyrics: `${base_url}track.lyrics.get?apikey=${musix_api_key}&track_id=`
-};
+        return randomNumber(0, list.length);
+    }).catch(err => {
+        console.log(err);
+    })
+}
+
+function getStart(list) {
+    return Promise.try(() => {
+        return randomNumber(0, list.length - 3);
+    })
+}
 
 let url = api_methods.get_albums;
 
@@ -56,65 +67,73 @@ axios.get(url)
             albums.push(new Album(name, id));
         }
 
-        let album = albums[Math.floor(Math.random() * albums.length)];
+        if (albums.length === 0)
+            process.exit();
 
-        url = api_methods.get_tracks + album.id;
+        let index = getIndex(albums);
+        let album;
 
-        return axios.get(url);
+        index.then(index => {
+            album = albums[index];
+            if (album == undefined)
+                process.exit();
+            url = api_methods.get_tracks + album.id;
+            return axios.get(url);
+        }).then(res => {
+            const track_list = res.data.message.body.track_list;
+            let song, name, id;
 
-    })
-    .then(res => {
-        const track_list = res.data.message.body.track_list;
-        let song, name, id, index;
+            let index = getIndex(track_list);
 
-        if (track_list.length === 1)
-            index = 0;
+            index.then(index => {
+                if (track_list[index] == undefined)
+                    process.exit();
+                name = track_list[index].track.track_name;
+                id = track_list[index].track.track_id;
+                song = new Song(name, id);
+                url = api_methods.get_lyrics + song.id;
+                return axios.get(url);
+            }).then(res => {
+                const lyrics = res.data.message.body.lyrics;
+                let body = lyrics.lyrics_body;
+                const stanzas = [];
+                let stanza = '';
 
-        else
-            index = Math.floor(Math.random() * track_list.length);
+                for (let char of body) {
+                    stanza += char;
+                    if (char == '\n') {
+                        stanzas.push(stanza);
+                        stanza = '';
+                    }
+                }
 
-        name = track_list[index].track.track_name;
-        id = track_list[index].track.track_id;
-        song = new Song(name, id);
+                for (let i = 0; i < stanzas.length; i++) {
+                    if (stanzas[i] == '\n' && stanzas[i].length == 1) {
+                        stanzas.splice(i, 1);
+                    }
+                }
 
-        url = api_methods.get_lyrics + song.id;
+                let start = getStart(stanzas);
+                start.then(start => {
+                    let tweet = stanzas[start] + stanzas[start + 1];
+                    tweet = tweet.substring(0, tweet.length - 1);
+                    console.log(tweet);
 
-        return axios.get(url);
-    })
-    .then(res => {
-        const lyrics = res.data.message.body.lyrics;
-        let body = lyrics.lyrics_body;
-        const stanzas = [];
-        let stanza = '';
 
-        for (let char of body) {
-            stanza += char;
-            if (char == '\n') {
-                stanzas.push(stanza);
-                stanza = '';
-            }
-        }
+                    client.post('statuses/update', { status: tweet }, (err, tweet, res) => {
+                        if (err)
+                            throw err;
 
-        for (let i = 0; i < stanzas.length; i++) {
-            if (stanzas[i] == '\n' && stanzas[i].length == 1) {
-                stanzas.splice(i, 1);
-            }
-        }
-
-        let start = Math.floor(Math.random() * stanzas.length);
-        let tweet = stanzas[start] + stanzas[start + 1];
-        tweet = tweet.substring(0, tweet.length - 1);
-
-        client.post('statuses/update', { status: tweet }, (err, tweet, res) => {
-            if (err)
-                throw err;
-
-            console.log(res);
-        });
+                        console.log(res);
+                    });
+                })
+            })
+        })
     })
     .catch(err => {
         console.log(err);
-    });
+    })
+
 
 
 
