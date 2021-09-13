@@ -21,11 +21,11 @@ With these accounts you will have access to the necessary resources available on
 
 ### **Steps**
 1. Download the source code using  ```git pull https://github.com/brieyana/bey-lyrics-bot``` in your computer&#8217;s terminal.
-2. In the project&#8217;s directory, use ```npm install``` through the terminal to install the necessary packages.
+2. In the project&#8217;s directory, use ```npm install``` in your terminal to install the necessary packages.
 3. Create a *.env* file to store the information of your Twitter and Musixmatch credentials.
     - For it to work correctly, the names of the variables in the *.env* file must match the ones in the *index.js* file.
 4. Change the **artist_id** information in the *index.js* file to the artist ID of your choice, based on the Musixmatch API.
-5. All done! You have now completely configured the program to create your own Twitter bot! Now use **node index.js** to run the program and check out what your bot tweeted!
+5. All done! You have now completely configured the program to create your own Twitter bot. Now use ```node index.js``` in your terminal to run the program and check out what your bot tweeted!
 
 
 
